@@ -22,7 +22,7 @@ spec:
               kind: Workflow
               metadata:
                 generateName: build-and-push-
-                namespace: argo-workflows
+                namespace: argo
               spec:
                 entrypoint: build
                 templates:
