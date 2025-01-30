@@ -5,6 +5,14 @@ metadata:
   namespace: argo
 spec:
   entrypoint: build
+  volumeClaimTemplates:
+    - metadata:
+        name: work
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 64Mi
   templates:
     - name: build
       steps:
@@ -20,16 +28,20 @@ spec:
         image: bitnami/git:latest
         command: ["/bin/sh", "-c"]
         args: ["git clone https://github.com/regal2t/argo.git && cd argo && git checkout main"]
+      volumeMounts:
+        - name: work
+          mountPath: /work
 
     - name: build-and-push
       container:
-        image: ghcr.io/containerd/containerd:v1.5.10
+        image: docker:20.10.7
         command: ["sh", "-c"]
         args:
           - |
             echo "Logging in to Docker Hub..."
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             echo "Building Docker Image..."
+            cd /work/argo # This ensures you are in the right directory where the Dockerfile is located
             docker build -t rajutiwari2024/argo-test:latest .
             echo "Pushing Docker Image..."
             docker push rajutiwari2024/argo-test:latest
@@ -45,6 +57,9 @@ spec:
               secretKeyRef:
                 name: dockerhub-secret
                 key: password
+        volumeMounts:
+          - name: work
+            mountPath: /work
 
     - name: notify-slack
       container:
