@@ -38,11 +38,11 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
+            cd /argo # This ensures you are in the right directory where the Dockerfile is located
+            docker build -t rajutiwari2024/argo-test:latest .
             echo "Logging in to Docker Hub..."
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             echo "Building Docker Image..."
-            cd /work/argo # This ensures you are in the right directory where the Dockerfile is located
-            docker build -t rajutiwari2024/argo-test:latest .
             echo "Pushing Docker Image..."
             docker push rajutiwari2024/argo-test:latest
             echo "Docker Image pushed successfully!"
