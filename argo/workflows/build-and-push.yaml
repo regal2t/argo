@@ -39,11 +39,11 @@ spec:
             mkdir -p /work
             git clone https://github.com/regal2t/argo.git /work
             cd /work && git checkout main
-            ls -al /work/argo
+            ls -al /work
             echo "Logging in to Docker Hub..."
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             echo "Building Docker Image..."
-            docker build -f /work/argo/Dockerfile -t rajutiwari2024/argo-test:latest .
+            docker build -f /work/Dockerfile -t rajutiwari2024/argo-test:latest .
             echo "Pushing Docker Image..."
             docker push rajutiwari2024/argo-test:latest
             echo "Docker Image pushed successfully!"
