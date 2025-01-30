@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: workdir-pv
+  namespace: argo
+spec:
+  capacity:
+    storage: 1Gi  # Match the requested storage for the PVC
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /tmp/argo-workdir  # This will create a directory in the node's filesystem
+  persistentVolumeReclaimPolicy: Retain
