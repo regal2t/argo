@@ -6,8 +6,8 @@ metadata:
 spec:
   dependencies:
     - name: git-dep
-      eventSourceName: git-event
-      eventName: example
+      eventSourceName: git-webhook-event
+      eventName: git-webhook
   triggers:
     - template:
         name: workflow-trigger
