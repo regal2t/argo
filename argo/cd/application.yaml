@@ -4,6 +4,7 @@ metadata:
   name: myapp
   namespace: argocd
 spec:
+  project: "default"  # Add this line
   source:
     repoURL: "https://github.com/regal2t/argo.git"
     path: "deployment"
