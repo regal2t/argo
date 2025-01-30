@@ -19,7 +19,7 @@ spec:
       container:
         image: alpine:3.14
         command: ["/bin/sh", "-c"]
-        args: ["git clone https://your-repository-url.git && cd your-repository-name && git checkout main"]
+        args: ["git clone https://github.com/regal2t/argo.git && cd argo && git checkout main"]
 
     - name: build-image
       container:
@@ -31,7 +31,7 @@ spec:
       container:
         image: curlimages/curl
         command: ["sh", "-c"]
-        args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Build and Deployment Completed!\"}' $SLACK_WEBHOOK"]
+        args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Build and Deployment Completed!\"}' https://hooks.slack.com/services/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"]
         env:
           - name: SLACK_WEBHOOK
             value: "your-slack-webhook-url"
