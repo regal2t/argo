@@ -34,7 +34,7 @@ spec:
             ls
             echo "Logging in to Docker Hub..."
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-            docker build -t rajutiwari2024/argo-test:latest .
+            docker build -f /work/argo/Dockerfile -t rajutiwari2024/argo-test:latest .
             echo "Building Docker Image..."
             echo "Pushing Docker Image..."
             docker push rajutiwari2024/argo-test:latest
