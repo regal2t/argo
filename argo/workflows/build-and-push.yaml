@@ -40,15 +40,9 @@ spec:
             echo "Docker Image pushed successfully!"
         env:
           - name: DOCKER_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: dockerhub-secret
-                key: username
+            value: "raju.tiwari@intuji.com"  # Replace with your Docker Hub username
           - name: DOCKER_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: dockerhub-secret
-                key: password
+            value: "H#Qfi4gY8meL&Gq$"        # Replace with your Docker Hub password
         volumeMounts:
           - name: work
             mountPath: /work
