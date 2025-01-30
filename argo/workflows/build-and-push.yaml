@@ -55,7 +55,7 @@ spec:
         args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Build and Deployment Completed!\"}' $SLACK_WEBHOOK"]
         env:
           - name: SLACK_WEBHOOK
-            value: "your-slack-webhook-url"
+            value: "https://hooks.slack.com/services/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"
 
   volumes:
     - name: work
