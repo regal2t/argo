@@ -7,7 +7,7 @@ spec:
   project: "default"  # Add this line
   source:
     repoURL: "https://github.com/regal2t/argo.git"
-    path: "deployment"
+    path: "."
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"
