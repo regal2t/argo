@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: git-webhook-event
+  namespace: argo-events
+spec:
+  webhook:
+    git-webhook:
+      port: "12000"
+      endpoint: "/git-push"
+      method: "POST"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: git-webhook-svc
+  namespace: argo-events
+spec:
+  ports:
+    - port: 12000
+      targetPort: 12000
+      nodePort: 30001  # External access port
+      protocol: TCP
+  selector:
+    eventsource-name: git-webhook-event
+  type: NodePort

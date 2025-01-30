@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: build-and-push-
+  namespace: argo-workflows
+spec:
+  entrypoint: build
+  templates:
+    - name: build
+      steps:
+        - - name: git-checkout
+            template: git-checkout
+        - - name: build-image
+            template: build-image
+        - - name: notify
+            template: notify-slack
+
+    - name: git-checkout
+      container:
+        image: alpine:3.14
+        command: ["/bin/sh", "-c"]
+        args: ["git clone https://your-repository-url.git && cd your-repository-name && git checkout main"]
+
+    - name: build-image
+      container:
+        image: docker:20.10
+        command: ["sh", "-c"]
+        args: ["docker build -t myrepo/app:latest ."]
+
+    - name: notify-slack
+      container:
+        image: curlimages/curl
+        command: ["sh", "-c"]
+        args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Build and Deployment Completed!\"}' $SLACK_WEBHOOK"]
+        env:
+          - name: SLACK_WEBHOOK
+            value: "your-slack-webhook-url"
