@@ -10,8 +10,8 @@ spec:
       steps:
         - - name: git-checkout
             template: git-checkout
-        - - name: build-image
-            template: build-image
+        - - name: build-and-push
+            template: build-and-push
         - - name: notify
             template: notify-slack
 
@@ -21,17 +21,36 @@ spec:
         command: ["/bin/sh", "-c"]
         args: ["git clone https://github.com/regal2t/argo.git && cd argo && git checkout main"]
 
-    - name: build-image
+    - name: build-and-push
       container:
         image: docker:20.10
         command: ["sh", "-c"]
-        args: ["docker build -t myrepo/app:latest ."]
+        args:
+          - |
+            echo "Logging in to Docker Hub..."
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+            echo "Building Docker Image..."
+            docker build -t rajutiwari2024/argo-test:latest .
+            echo "Pushing Docker Image..."
+            docker push rajutiwari2024/argo-test:latest
+            echo "Docker Image pushed successfully!"
+        env:
+          - name: DOCKER_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: dockerhub-secret
+                key: .dockerconfigjson
+          - name: DOCKER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: dockerhub-secret
+                key: .dockerconfigjson
 
     - name: notify-slack
       container:
         image: curlimages/curl
         command: ["sh", "-c"]
-        args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Build and Deployment Completed!\"}' https://hooks.slack.com/services/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"]
+        args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Build and Deployment Completed!\"}' $SLACK_WEBHOOK"]
         env:
           - name: SLACK_WEBHOOK
             value: "your-slack-webhook-url"

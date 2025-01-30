@@ -30,7 +30,7 @@ spec:
                     steps:
                       - - name: git-checkout
                           template: git-checkout
-                      - - name: build-image
-                          template: build-image
+                      - - name: build-and-push
+                          template: build-and-push
                       - - name: notify
                           template: notify-slack
