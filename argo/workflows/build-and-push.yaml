@@ -19,7 +19,12 @@ spec:
       container:
         image: bitnami/git:latest
         command: ["/bin/sh", "-c"]
-        args: ["git clone https://github.com/regal2t/argo.git && cd argo && git checkout main"]
+        args:
+          - |
+            mkdir -p /work  # Create the directory if it doesn't exist
+            git clone https://github.com/regal2t/argo.git /work  # Clone into /work/argo
+            cd /work/argo && git checkout main
+            ls /work/argo  # Debugging step to check the contents of the cloned directory
       volumeMounts:
         - name: work
           mountPath: /work
@@ -30,12 +35,12 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            cd /work/argo # This ensures you are in the right directory where the Dockerfile is located
-            ls /work
+            cd /work/argo  # Ensure we are in the correct directory
+            ls /work/argo  # Debugging step to ensure the files are present
             echo "Logging in to Docker Hub..."
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-            docker build -f /work/argo/Dockerfile -t rajutiwari2024/argo-test:latest .
             echo "Building Docker Image..."
+            docker build -f /work/argo/Dockerfile -t rajutiwari2024/argo-test:latest .
             echo "Pushing Docker Image..."
             docker push rajutiwari2024/argo-test:latest
             echo "Docker Image pushed successfully!"
