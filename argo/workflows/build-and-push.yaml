@@ -31,7 +31,7 @@ spec:
 
     - name: build-and-push
       container:
-        image: docker:20.10.7
+        image: docker:20.10.7-dind  # Use the docker:dind image
         command: ["sh", "-c"]
         args:
           - |
@@ -55,8 +55,8 @@ spec:
         volumeMounts:
           - name: work
             mountPath: /work
-          - name: docker-socket
-            mountPath: /var/run/docker.sock  # Mount the Docker socket to the container
+        securityContext:
+          privileged: true  # This is required to allow Docker-in-Docker
 
     - name: notify-slack
       container:
@@ -70,7 +70,3 @@ spec:
   volumes:
     - name: work
       emptyDir: {}
-    - name: docker-socket
-      hostPath:
-        path: /var/run/docker.sock  # Path to Docker socket on the host
-        type: Socket
