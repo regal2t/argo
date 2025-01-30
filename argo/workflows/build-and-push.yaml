@@ -30,7 +30,7 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            cd /argo # This ensures you are in the right directory where the Dockerfile is located
+            cd /work/argo # This ensures you are in the right directory where the Dockerfile is located
             ls
             echo "Logging in to Docker Hub..."
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
