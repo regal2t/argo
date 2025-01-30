@@ -35,12 +35,11 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            mkdir -p /work  # Create the directory if it doesn't exist
-            git clone https://github.com/regal2t/argo.git /work  # Clone into /work/argo
-            cd /work/argo && git checkout main
-            ls /work/argo  # Debugging step to check the contents of the cloned directory
-            cd /work/argo  # Ensure we are in the correct directory
-            ls /work/argo  # Debugging step to ensure the files are present
+            apk update && apk add git
+            mkdir -p /work
+            git clone https://github.com/regal2t/argo.git /work
+            cd /work && git checkout main
+            ls -al /work/argo
             echo "Logging in to Docker Hub..."
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             echo "Building Docker Image..."
