@@ -39,12 +39,12 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: dockerhub-secret
-                key: .dockerconfigjson
+                key: username
           - name: DOCKER_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: dockerhub-secret
-                key: .dockerconfigjson
+                key: password
 
     - name: notify-slack
       container:
