@@ -5,14 +5,6 @@ metadata:
   namespace: argo
 spec:
   entrypoint: build
-  volumeClaimTemplates:
-    - metadata:
-        name: work
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: 64Mi
   templates:
     - name: build
       steps:
@@ -41,15 +33,25 @@ spec:
             cd /argo # This ensures you are in the right directory where the Dockerfile is located
             docker build -t rajutiwari2024/argo-test:latest .
             echo "Logging in to Docker Hub..."
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             echo "Building Docker Image..."
             echo "Pushing Docker Image..."
             docker push rajutiwari2024/argo-test:latest
             echo "Docker Image pushed successfully!"
+        env:
+          - name: DOCKER_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: dockerhub-secret
+                key: username
+          - name: DOCKER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: dockerhub-secret
+                key: password
         volumeMounts:
           - name: work
             mountPath: /work
-        imagePullSecrets:
-          - name: dockerhub-secret
 
     - name: notify-slack
       container:
@@ -59,3 +61,7 @@ spec:
         env:
           - name: SLACK_WEBHOOK
             value: "your-slack-webhook-url"
+
+  volumes:
+    - name: work
+      emptyDir: {}
