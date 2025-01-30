@@ -55,6 +55,8 @@ spec:
         volumeMounts:
           - name: work
             mountPath: /work
+          - name: docker-socket
+            mountPath: /var/run/docker.sock  # Mount the Docker socket to the container
 
     - name: notify-slack
       container:
@@ -68,3 +70,7 @@ spec:
   volumes:
     - name: work
       emptyDir: {}
+    - name: docker-socket
+      hostPath:
+        path: /var/run/docker.sock  # Path to Docker socket on the host
+        type: Socket
