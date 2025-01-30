@@ -23,7 +23,7 @@ spec:
 
     - name: build-and-push
       container:
-        image: docker:20.10
+        image: ghcr.io/containerd/containerd:v1.5.10
         command: ["sh", "-c"]
         args:
           - |
