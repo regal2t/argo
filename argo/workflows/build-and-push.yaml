@@ -31,7 +31,7 @@ spec:
         args:
           - |
             cd /work/argo # This ensures you are in the right directory where the Dockerfile is located
-            ls
+            ls /work
             echo "Logging in to Docker Hub..."
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             docker build -f /work/argo/Dockerfile -t rajutiwari2024/argo-test:latest .
