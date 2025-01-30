@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: myapp
-          image: myrepo/app:latest
+          image: rajutiwari2024/argo-test:latest
           ports:
             - containerPort: 80
