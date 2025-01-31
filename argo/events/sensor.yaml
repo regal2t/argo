@@ -25,15 +25,11 @@ spec:
                 namespace: argo
               spec:
                 entrypoint: main
-                volumeClaimTemplates:
-                  - metadata:
-                      name: workdir
-                    spec:
-                      accessModes: [ "ReadWriteOnce" ]
-                      resources:
-                        requests:
-                          storage: 1Gi
-                      volumeName: workdir-pv
+                volumeClaimTemplates: []  # Remove this section to prevent creating a new PVC each time
+                volumes:
+                  - name: workdir
+                    persistentVolumeClaim:
+                      claimName: workdir-pvc  # Reference your existing PVC here
                 templates:
                   - name: main
                     steps:
@@ -48,7 +44,7 @@ spec:
                       command: ["/bin/sh", "-c"]
                       args:
                         - |
-                          mkdir -p /mnt/vol
+                          rm -rf /mnt/vol
                           git clone https://github.com/regal2t/argo.git /mnt/vol
                           cd /mnt/vol && git checkout main
                           echo "Current Git SHA:"
