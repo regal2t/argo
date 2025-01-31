@@ -1,70 +1,61 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Sensor
+kind: Workflow
 metadata:
-  name: git-sensor
-  namespace: argo-events
+  generateName: git-checkout-test-
 spec:
-  dependencies:
-    - name: git-dep
-      eventSourceName: git-webhook-event
-      eventName: git-webhook
-  triggers:
-    - template:
-        name: workflow-trigger
-        k8s:
-          group: argoproj.io
-          version: v1alpha1
-          resource: workflows
-          operation: create
-          source:
-            resource:
-              apiVersion: argoproj.io/v1alpha1
-              kind: Workflow
-              metadata:
-                generateName: git-checkout-test-
-                namespace: argo
-              spec:
-                entrypoint: main
-                templates:
-                  - name: main
-                    steps:
-                      - - name: git-checkout
-                          template: git-checkout
-                      - - name: verify-work-directory
-                          template: verify-work-directory
+  entrypoint: main
+  volumeClaimTemplates:                 # Dynamically create a PVC
+  - metadata:
+      name: workdir                     # Name of the volume claim
+    spec:
+      accessModes: [ "ReadWriteOnce" ]  # Access mode for the volume
+      resources:
+        requests:
+          storage: 1Gi                  # Request 1Gi of storage
 
-                  - name: git-checkout
-                    container:
-                      image: bitnami/git:latest
-                      command: ["/bin/sh", "-c"]
-                      args:
-                        - |
-                          mkdir -p /work
-                          git clone https://github.com/regal2t/argo.git /work
-                          cd /work && git checkout main
-                          echo "Current Git SHA:"
-                          git rev-parse HEAD > /work/git_sha.txt
-                          ls /work
-                      volumeMounts:
-                        - name: work
-                          mountPath: /work
+  templates:
+    - name: main
+      steps:
+        - - name: git-checkout
+            template: git-checkout
+        - - name: verify-work-directory
+            template: verify-work-directory
 
-                  - name: verify-work-directory
-                    container:
-                      image: alpine:latest
-                      command: ["sh", "-c"]
-                      args:
-                        - |
-                          echo "Contents of /work directory:"
-                          ls -al /work
-                          echo "Contents of /work/argo directory:"
-                          ls -al /work/argo
-                          echo "Git SHA:"
-                          cat /work/git_sha.txt
-                      volumeMounts:
-                        - name: work
-                          mountPath: /work
+    - name: git-checkout
+      container:
+        image: bitnami/git:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            mkdir -p /mnt/vol
+            echo "Cloning repository..."
+            git clone https://github.com/regal2t/argo.git /mnt/vol
+            if [ $? -eq 0 ]; then
+              echo "Git clone successful!"
+              cd /mnt/vol && git checkout main
+              echo "Current Git SHA:"
+              git rev-parse HEAD > /mnt/vol/git_sha.txt
+              ls /mnt/vol
+            else
+              echo "Git clone failed!"
+              exit 1
+            fi
+        volumeMounts:
+          - name: workdir               # Mount the PVC
+            mountPath: /mnt/vol
 
-                volumes:
-                  - name: work
-                    emptyDir: {}
+    - name: verify-work-directory
+      container:
+        image: alpine:latest
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Contents of /mnt/vol directory:"
+            ls -al /mnt/vol
+            echo "Contents of /mnt/vol/argo directory:"
+            ls -al /mnt/vol/argo
+            echo "Git SHA:"
+            cat /mnt/vol/git_sha.txt
+        volumeMounts:
+          - name: workdir               # Mount the same PVC
+            mountPath: /mnt/vol
