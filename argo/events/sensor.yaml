@@ -33,6 +33,7 @@ spec:
                       resources:
                         requests:
                           storage: 1Gi
+                      volumeName: workdir-pv
                 templates:
                   - name: main
                     steps:
