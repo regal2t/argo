@@ -60,7 +60,7 @@ spec:
           - name: DOCKER_USERNAME
             value: "raju.tiwari@intuji.com"  # Replace with your Docker Hub username
           - name: DOCKER_PASSWORD
-            value: "H#Qfi4gY8meL&Gq$"        # Replace with your Docker Hub password
+            value: ""        # Replace with your Docker Hub password
         volumeMounts:
           - name: work
             mountPath: /work
