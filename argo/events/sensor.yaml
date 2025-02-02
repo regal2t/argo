@@ -37,6 +37,12 @@ spec:
                           template: git-checkout
                       - - name: build-and-push
                           template: build-and-push
+                      - - name: notify-build-complete
+                          template: notify-build-complete
+                      - - name: rollout-deploy
+                          template: rollout-deploy
+                      - - name: notify-rollout-complete
+                          template: notify-rollout-complete
 
                   - name: git-checkout
                     container:
@@ -53,22 +59,6 @@ spec:
                       volumeMounts:
                         - name: workdir
                           mountPath: /mnt/vol
-
-                  # - name: verify-work-directory
-                  #   container:
-                  #     image: alpine:latest
-                  #     command: ["sh", "-c"]
-                  #     args:
-                  #       - |
-                  #         echo "Contents of /mnt/vol directory:"
-                  #         ls -al /mnt/vol
-                  #         echo "Contents of /mnt/vol/argo directory:"
-                  #         ls -al /mnt/vol/argo
-                  #         echo "Git SHA:"
-                  #         cat /mnt/vol/git_sha.txt
-                  #     volumeMounts:
-                  #       - name: workdir
-                  #         mountPath: /mnt/vol
 
                   - name: build-and-push
                     container:
@@ -110,3 +100,40 @@ spec:
                       securityContext:
                         privileged: true
 
+                  - name: notify-build-complete
+                    container:
+                      image: curlimages/curl
+                      command: ["sh", "-c"]
+                      args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Docker Image Built and Pushed Successfully!\"}' $SLACK_WEBHOOK"]
+                      env:
+                        - name: SLACK_WEBHOOK
+                          valueFrom:
+                            secretKeyRef:
+                              name: slack-webhook
+                              key: url
+
+
+                  - name: rollout-deploy
+                    container:
+                      image: bitnami/kubectl:latest
+                      command: ["sh", "-c"]
+                      args:
+                        - |
+                          export IMAGE_TAG=$(cat /work/image_tag.txt)
+                          echo "Applying rollout with image: $IMAGE_TAG"
+                          kubectl patch rollout myapp-rollout -n myapp --type='json' -p="[{'op': 'replace', 'path': '/spec/template/spec/containers/0/image', 'value': \"$IMAGE_TAG\"}]"
+                      volumeMounts:
+                        - name: work
+                          mountPath: /work
+
+                  - name: notify-rollout-complete
+                    container:
+                      image: curlimages/curl
+                      command: ["sh", "-c"]
+                      args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Rollout Deployment Completed!\"}' $SLACK_WEBHOOK"]
+                      env:
+                        - name: SLACK_WEBHOOK
+                          valueFrom:
+                            secretKeyRef:
+                              name: slack-webhook
+                              key: url
