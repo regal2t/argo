@@ -119,12 +119,12 @@ spec:
                       command: ["sh", "-c"]
                       args:
                         - |
-                          export IMAGE_TAG=$(cat /work/image_tag.txt)
+                          export IMAGE_TAG=$(cat /mnt/vol/image_tag.txt)
                           echo "Applying rollout with image: $IMAGE_TAG"
                           kubectl patch rollout myapp-rollout -n myapp --type='json' -p="[{'op': 'replace', 'path': '/spec/template/spec/containers/0/image', 'value': \"$IMAGE_TAG\"}]"
                       volumeMounts:
-                        - name: work
-                          mountPath: /work
+                        - name: workdir
+                          mountPath: /mnt/vol
 
                   - name: notify-rollout-complete
                     container:
