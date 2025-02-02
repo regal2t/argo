@@ -54,18 +54,59 @@ spec:
                         - name: workdir
                           mountPath: /mnt/vol
 
-                  - name: verify-work-directory
+                  # - name: verify-work-directory
+                  #   container:
+                  #     image: alpine:latest
+                  #     command: ["sh", "-c"]
+                  #     args:
+                  #       - |
+                  #         echo "Contents of /mnt/vol directory:"
+                  #         ls -al /mnt/vol
+                  #         echo "Contents of /mnt/vol/argo directory:"
+                  #         ls -al /mnt/vol/argo
+                  #         echo "Git SHA:"
+                  #         cat /mnt/vol/git_sha.txt
+                  #     volumeMounts:
+                  #       - name: workdir
+                  #         mountPath: /mnt/vol
+
+                  - name: build-and-push
                     container:
-                      image: alpine:latest
+                      image: docker:20.10.7-dind
                       command: ["sh", "-c"]
                       args:
                         - |
-                          echo "Contents of /mnt/vol directory:"
-                          ls -al /mnt/vol
-                          echo "Contents of /mnt/vol/argo directory:"
-                          ls -al /mnt/vol/argo
-                          echo "Git SHA:"
-                          cat /mnt/vol/git_sha.txt
+                          dockerd &
+                          while ! docker info > /dev/null 2>&1; do
+                            sleep 1
+                          done
+                          echo "Docker daemon started!"
+                          apk update && apk add git
+                          cd /mnt/vol && git branch
+                          COMMIT_SHA=$(git rev-parse --short HEAD)
+                          IMAGE_TAG="rajutiwari2024/argo-test:${COMMIT_SHA}"
+                          echo "Logging in to Docker Hub..."
+                          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+                          echo "Building Docker Image..."
+                          docker build -t $IMAGE_TAG .
+                          echo "Pushing Docker Image..."
+                          docker push $IMAGE_TAG
+                          echo "Docker Image pushed successfully!"
+                          echo $IMAGE_TAG > image_tag.txt
+                      env:
+                        - name: DOCKER_USERNAME
+                          valueFrom:
+                            secretKeyRef:
+                              name: docker-credentials
+                              key: username
+                        - name: DOCKER_PASSWORD
+                          valueFrom:
+                            secretKeyRef:
+                              name: docker-credentials
+                              key: password
                       volumeMounts:
                         - name: workdir
                           mountPath: /mnt/vol
+                      securityContext:
+                        privileged: true
+
