@@ -35,8 +35,8 @@ spec:
                     steps:
                       - - name: git-checkout
                           template: git-checkout
-                      - - name: verify-work-directory
-                          template: verify-work-directory
+                      - - name: build-and-push
+                          template: build-and-push
 
                   - name: git-checkout
                     container:
