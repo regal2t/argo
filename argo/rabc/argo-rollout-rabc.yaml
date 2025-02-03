@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rollout-editor
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["rollouts"]
+    verbs: ["get", "patch", "update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rollout-editor-binding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: argo  # Service account running Argo Workflow
+roleRef:
+  kind: ClusterRole
+  name: rollout-editor
+  apiGroup: rbac.authorization.k8s.io

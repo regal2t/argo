@@ -9,14 +9,19 @@ spec:
     canary:
       steps:
         - setWeight: 50
-        - pause: {duration: 10m}
+        - pause:
+            duration: 30s
+  selector:
+    matchLabels:
+      app: myapp  # This label will match the Pods created by this Rollout
   template:
     metadata:
       labels:
-        app: myapp
+        app: myapp  # Ensure this label matches the selector above
     spec:
       containers:
         - name: myapp
-          image: myrepo/app:latest
+          image: rajutiwari2024/argo-test:f6346d9
           ports:
             - containerPort: 80
+              protocol: TCP

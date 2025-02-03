@@ -35,8 +35,14 @@ spec:
                     steps:
                       - - name: git-checkout
                           template: git-checkout
-                      - - name: verify-work-directory
-                          template: verify-work-directory
+                      - - name: build-and-push
+                          template: build-and-push
+                      - - name: notify-build-complete
+                          template: notify-build-complete
+                      - - name: rollout-deploy
+                          template: rollout-deploy
+                      - - name: notify-rollout-complete
+                          template: notify-rollout-complete
 
                   - name: git-checkout
                     container:
@@ -54,18 +60,80 @@ spec:
                         - name: workdir
                           mountPath: /mnt/vol
 
-                  - name: verify-work-directory
+                  - name: build-and-push
                     container:
-                      image: alpine:latest
+                      image: docker:20.10.7-dind
                       command: ["sh", "-c"]
                       args:
                         - |
-                          echo "Contents of /mnt/vol directory:"
-                          ls -al /mnt/vol
-                          echo "Contents of /mnt/vol/argo directory:"
-                          ls -al /mnt/vol/argo
-                          echo "Git SHA:"
-                          cat /mnt/vol/git_sha.txt
+                          dockerd &
+                          while ! docker info > /dev/null 2>&1; do
+                            sleep 1
+                          done
+                          echo "Docker daemon started!"
+                          apk update && apk add git
+                          cd /mnt/vol && git branch
+                          COMMIT_SHA=$(git rev-parse --short HEAD)
+                          IMAGE_TAG="rajutiwari2024/argo-test:${COMMIT_SHA}"
+                          echo "Logging in to Docker Hub..."
+                          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+                          echo "Building Docker Image..."
+                          docker build -t $IMAGE_TAG .
+                          echo "Pushing Docker Image..."
+                          docker push $IMAGE_TAG
+                          echo "Docker Image pushed successfully!"
+                          echo $IMAGE_TAG > image_tag.txt
+                      env:
+                        - name: DOCKER_USERNAME
+                          valueFrom:
+                            secretKeyRef:
+                              name: docker-credentials
+                              key: username
+                        - name: DOCKER_PASSWORD
+                          valueFrom:
+                            secretKeyRef:
+                              name: docker-credentials
+                              key: password
                       volumeMounts:
                         - name: workdir
                           mountPath: /mnt/vol
+                      securityContext:
+                        privileged: true
+
+                  - name: notify-build-complete
+                    container:
+                      image: curlimages/curl
+                      command: ["sh", "-c"]
+                      args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Docker Image Built and Pushed Successfully!\"}' $SLACK_WEBHOOK"]
+                      env:
+                        - name: SLACK_WEBHOOK
+                          valueFrom:
+                            secretKeyRef:
+                              name: slack-webhook
+                              key: url
+
+
+                  - name: rollout-deploy
+                    container:
+                      image: bitnami/kubectl:latest
+                      command: ["sh", "-c"]
+                      args:
+                        - |
+                          export IMAGE_TAG=$(cat /mnt/vol/image_tag.txt)
+                          echo "Applying rollout with image: $IMAGE_TAG"
+                          kubectl patch rollout myapp-rollout -n myapp --type='json' -p="[{'op': 'replace', 'path': '/spec/template/spec/containers/0/image', 'value': \"$IMAGE_TAG\"}]"
+                      volumeMounts:
+                        - name: workdir
+                          mountPath: /mnt/vol
+
+                  - name: notify-rollout-complete
+                    container:
+                      image: curlimages/curl
+                      command: ["sh", "-c"]
+                      args: ["curl -X POST -H 'Content-type: application/json' --data '{\"text\": \"Rollout Deployment Completed!\"}' $SLACK_WEBHOOK"]
+                      env:
+                        - name: SLACK_WEBHOOK
+                          valueFrom:
+                            secretKeyRef:
+                              name: slack-webhook
+                              key: url
