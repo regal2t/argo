@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: myapp
-          image: rajutiwari2024/argo-test
+          image: nginx
           ports:
             - containerPort: 80
 
